@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cenaze Alayı Yönetim Paneli</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #140c08; --card: #21150e; --card2: #2c1c12; --line: #4a3020; --text: #f4eefc; --mute: #a796c4;
+      --gold: #ffd34d; --pink: #ff7aa8; --green: #6bdc5b; --red: #ff5d6c; --blue: #5ec8ff; --orange: #ff9f43;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 14px/1.45 system-ui, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+    header { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 20px;
+      background: rgba(17, 9, 32, .94); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+    header h1 { font-size: 18px; margin: 0; margin-right: auto; }
+    .chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 99px; background: var(--card2); border: 1px solid var(--line); font-weight: 600; font-size: 13px; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--mute); }
+    .ok .dot { background: var(--green); box-shadow: 0 0 8px var(--green); } .bad .dot { background: var(--red); box-shadow: 0 0 8px var(--red); } .warn .dot { background: var(--gold); }
+    .bad { border-color: #7a2a3a; color: #ffc2c8; }
+    main { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px; padding: 16px 20px 40px; max-width: 1500px; margin: 0 auto; }
+    @media (max-width: 980px) { main { grid-template-columns: 1fr; padding: 12px 16px 32px; } header { padding: 10px 16px; } }
+    .col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; min-width: 0; }
+    h2 { display: flex; align-items: center; gap: 8px; font-size: 15px; margin: 0 0 12px; color: var(--gold); }
+    h2 .count { margin-left: auto; color: var(--mute); font-weight: 600; font-size: 13px; }
+    .hint { color: var(--mute); font-size: 12.5px; margin: 8px 0 0; }
+    button { font: inherit; font-weight: 600; padding: 7px 12px; border-radius: 9px; border: 1px solid #4a3270; background: #2c1b47; color: #fff; cursor: pointer; white-space: nowrap; }
+    button:hover { background: #3a2560; } button:active { transform: translateY(1px); }
+    button.primary { background: linear-gradient(#ff8a3d, #e5602a); border-color: #ff9f5a; }
+    button.primary:hover { background: linear-gradient(#ff9a55, #ef6c34); }
+    button.danger { border-color: #7a2a3a; background: #3a1622; }
+    button.sm { padding: 4px 8px; font-size: 12.5px; border-radius: 7px; }
+    button:disabled { opacity: .45; cursor: default; }
+    input[type=text], input[type=number] { font: inherit; padding: 8px 10px; border-radius: 9px; border: 1px solid #4a3270; background: #120a1f; color: #fff; width: 100%; min-width: 0; }
+    input:focus { outline: 2px solid #8a5cff; outline-offset: 0; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--mute); font-weight: 600; }
+    .form .full { grid-column: 1 / -1; }
+    .chips button { padding: 5px 10px; font-size: 13px; }
+    .chips button.on { background: var(--gold); color: #2a1800; border-color: var(--gold); }
+    .effect { padding: 8px 12px; border-radius: 9px; background: #120a1f; border: 1px dashed #4a3270; color: #e5d9ff; font-size: 13px; }
+    .tabs { display: flex; gap: 4px; margin-left: auto; }
+    .tabs button { padding: 3px 10px; font-size: 12.5px; border-radius: 99px; background: transparent; }
+    .tabs button.on { background: var(--card2); border-color: var(--gold); color: var(--gold); }
+    .av { width: 30px; height: 30px; border-radius: 50%; flex: none; object-fit: cover; display: grid; place-items: center; font-weight: 800; font-size: 13px; color: #fff; overflow: hidden; }
+    .who { display: flex; align-items: center; gap: 9px; min-width: 0; cursor: pointer; }
+    .who b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .who small { display: block; color: var(--mute); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .who:hover b { color: var(--gold); }
+    .pickwrap { position: relative; }
+    .ac { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 30; background: #1b120c; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.5); max-height: 320px; overflow-y: auto; display: none; }
+    .ac.open { display: block; }
+    .ac .opt { display: flex; align-items: center; gap: 9px; padding: 7px 10px; cursor: pointer; color: var(--text); font-weight: 500; }
+    .ac .opt.hi, .ac .opt:hover { background: #3a2616; }
+    .ac .opt b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ac .opt small { display: block; color: var(--mute); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ac .none { padding: 9px 10px; color: var(--mute); font-weight: 500; }
+    .selcard { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px dashed var(--line); border-radius: 10px; min-height: 46px; }
+    .selcard.on { border-style: solid; border-color: #8a6a3a; background: #2a1a10; }
+    .selcard .st { margin-left: auto; font-size: 12.5px; color: var(--mute); text-align: right; flex: none; }
+    .selcard .clr { flex: none; }
+    #feed { display: flex; flex-direction: column; gap: 6px; max-height: calc(100vh - 170px); overflow-y: auto; padding-right: 4px; }
+    .ev { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 10px; background: var(--card2); border: 1px solid transparent; }
+    .ev.gift { border-color: #4b2a5e; }
+    .ev.miss { border-color: var(--red); background: #2c1224; }
+    .ev .time { color: var(--mute); font-size: 12px; font-variant-numeric: tabular-nums; }
+    .ev .what { font-size: 13px; color: #e5d9ff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ev .what .coins { color: var(--gold); font-weight: 800; }
+    .ev .side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .badge { font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+    .badge.done { background: rgba(107, 220, 91, .15); color: var(--green); }
+    .badge.wait { background: rgba(255, 211, 77, .14); color: var(--gold); }
+    .badge.miss { background: rgba(255, 93, 108, .18); color: #ff9aa4; }
+    .badge.man { background: rgba(94, 200, 255, .15); color: var(--blue); }
+    .empty { color: var(--mute); text-align: center; padding: 22px 8px; }
+    .roles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .role { padding: 10px 12px; border-radius: 11px; background: var(--card2); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .role .head { display: flex; justify-content: space-between; font-weight: 700; font-size: 13px; color: var(--pink); }
+    .role .head span:last-child { color: var(--mute); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .role .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 12px; color: var(--mute); font-weight: 600; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+    td { padding: 6px; border-bottom: 1px solid #261843; vertical-align: middle; }
+    td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    td.acts { white-space: nowrap; text-align: right; }
+    td.acts button { margin-left: 3px; }
+    .tablewrap { max-height: 460px; overflow: auto; }
+    .low { color: #ff9aa4; }
+    .tag { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 6px; margin-left: 4px; background: rgba(255, 211, 77, .16); color: var(--gold); }
+    .tag.pink { background: rgba(255, 122, 168, .16); color: var(--pink); }
+    .music { display: flex; flex-direction: column; gap: 10px; }
+    .np { font-size: 15px; font-weight: 700; }
+    .np small { color: var(--mute); font-weight: 600; margin-left: 6px; }
+    #toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(20px); opacity: 0; transition: .25s; padding: 10px 18px; border-radius: 12px; background: #2d6a2a; color: #fff; font-weight: 700; z-index: 10; pointer-events: none; max-width: calc(100vw - 32px); }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.err { background: #8a2433; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>🕌 Şehzade Mustafa Cenazesi · Yönetim</h1>
+  <span id="stTik" class="chip warn"><span class="dot"></span><span>Sunucuya bağlanılıyor…</span></span>
+  <span id="stGame" class="chip warn"><span class="dot"></span><span>Oyun ekranı: ?</span></span>
+</header>
+
+<main>
+  <div class="col">
+    <section>
+      <h2>📥 Gelen olaylar
+        <span class="tabs" id="tabs">
+          <button data-f="gift" class="on">🎁 Hediyeler</button>
+          <button data-f="chat">💬 Yorumlar</button>
+          <button data-f="all">Hepsi</button>
+        </span>
+      </h2>
+      <div id="feed"><div class="empty">Henüz olay yok. Yayındaki hediye ve yorumlar burada görünecek.</div></div>
+      <p class="hint">✓ İşlendi: oyun ekranı olayı aldı ve uyguladı. ⚠ İşlenmedi: oyuna ulaşmadı, <b>↻ Uygula</b> ile tekrar gönder. İsme tıklayınca kişi sağdaki forma gelir.</p>
+    </section>
+  </div>
+
+  <div class="col">
+    <section>
+      <h2>🎁 Elle hediye / işlem</h2>
+      <div class="form">
+        <label class="pickwrap">Kullanıcı adı (@) ya da isim ara
+          <input type="text" id="uid" placeholder="ornek_kullanici" autocomplete="off" spellcheck="false">
+          <div class="ac" id="ac"></div>
+        </label>
+        <label>Görünen isim (boş olabilir)
+          <input type="text" id="uname" placeholder="Ayşe">
+        </label>
+        <label>Jeton
+          <input type="number" id="coins" min="1" max="100000" value="1">
+        </label>
+        <label>Hediye adı (boş olabilir)
+          <input type="text" id="gname" placeholder="Çay · Kalp · Donut · Gül">
+        </label>
+        <div class="full selcard" id="selcard"></div>
+        <div class="full row chips" id="coinChips"></div>
+        <div class="full effect" id="effect"></div>
+        <label class="full" style="flex-direction:row;align-items:center;gap:8px;color:var(--text);font-weight:500">
+          <input type="checkbox" id="logit" checked> Hediye kaydına (CSV) "elle" notuyla yaz
+        </label>
+        <div class="full row">
+          <button class="primary" id="giveGift">🎁 Hediyeyi uygula</button>
+          <button id="doJoin">🕯️ Saflara ekle</button>
+          <button id="doKeep">📌 Saflarda sabitle</button>
+          <button id="doKick" class="danger">✕ Alaydan çıkar</button>
+        </div>
+      </div>
+      <p class="hint">Hediye gerçek hediye gibi işlenir: puan, ön saf, omuz verme ve sancak kuralları aynen uygulanır. Hediye adını boş bırakırsan rol vermez, sadece ön safa geçirir.</p>
+    </section>
+
+    <section>
+      <h2>🖼️ Portre, ⚰️ tabut ve 🚩 sancaklar</h2>
+      <div class="roles" id="roles"></div>
+      <p class="hint">"Ata", formdaki kişiyi o koltuğa doğrudan koyar (hediye ve puan eklemez). Koltuktan kalkan saflara döner. Boş koltukta isimsiz bir yeniçeri taşır.</p>
+    </section>
+
+    <section>
+      <h2>🕯️ Saflardakiler <span class="count" id="dCount"></span></h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Kişi</th><th>Puan</th><th>Durum</th><th style="text-align:right">İşlem</th></tr></thead>
+          <tbody id="dancers"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="dEmpty">Saflar boş.</div>
+      <p class="hint">Hediye atan süresiz kalır ve ön saflara geçer. Saflar doluyken yeni biri gelince yorumla girmiş en eski kişi ayrılır ("1. çıkacak"). 📌 ile birini sabitlersen o da çıkmaz.</p>
+    </section>
+
+    <section>
+      <h2>🎵 Müzik, kamera, sıfırlama</h2>
+      <div class="music">
+        <div class="np" id="np">—</div>
+        <div class="row">
+          <button data-cam="wide">🎥 Geniş (herkes)</button>
+          <button data-cam="tabut">⚰️ Tabuta yakın</button>
+          <button data-cam="omuz">🤝 Bir taşıyıcıya</button>
+          <button data-cam="portre">🖼️ Portreye</button>
+          <button data-cam="sancak">🚩 Sancaklara</button>
+          <button data-cam="dua">🤲 Dua çekimi</button>
+          <button id="musicToggle">🔇 Oyun müziğini kapat</button>
+          <button id="reset" class="danger">🔄 Alayı sıfırla</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+<div id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const pad = (n) => String(n).padStart(2, '0');
+const hms = (ms) => { const d = new Date(ms); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
+const mmss = (s) => `${Math.floor(s / 60)}:${pad(Math.max(0, s) % 60)}`;
+const hue = (s) => { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) | 0; return Math.abs(h) % 360; };
+
+const events = [];            // olay geçmişi (en yeni sonda)
+const known = new Map();      // id -> { id, name, avatar }
+let state = null, games = 0, filter = 'gift', ws;
+const MISS_AFTER = 4000;      // bu kadar ms içinde onay gelmezse "işlenmedi"
+
+function avatar(u) {
+  if (u?.avatar) { const i = el('img', 'av'); i.src = u.avatar; i.referrerPolicy = 'no-referrer'; i.alt = ''; i.onerror = () => i.replaceWith(initial(u)); return i; }
+  return initial(u);
+}
+function initial(u) { const d = el('div', 'av', [...(u?.name || u?.id || '?')][0].toLocaleUpperCase('tr')); d.style.background = `hsl(${hue(u?.id)} 60% 45%)`; return d; }
+function who(u, sub) {
+  const w = el('div', 'who'); w.title = 'Forma getir';
+  w.append(avatar(u));
+  const t = el('div'); t.style.minWidth = '0';
+  t.append(el('b', '', u?.name || u?.id || '?'), el('small', '', sub ?? `@${u?.id || '?'}`));
+  w.append(t);
+  w.addEventListener('pointerdown', (ev) => { if (ev.button === 0) { ev.preventDefault(); pick(u); } });
+  return w;
+}
+function remember(u) { if (u?.id) known.set(u.id, { ...known.get(u.id), ...u }); }
+
+let toastT;
+function toast(msg, err) { const t = $('toast'); t.textContent = msg; t.className = err ? 'show err' : 'show'; clearTimeout(toastT); toastT = setTimeout(() => (t.className = ''), 2200); }
+
+// ---------------------------------------------------------------- sunucu
+function connect() {
+  ws = new WebSocket(`ws://${location.host}/ws`);
+  ws.onopen = () => ws.send(JSON.stringify({ type: 'hello', role: 'admin' }));
+  ws.onmessage = (m) => {
+    const e = JSON.parse(m.data);
+    switch (e.type) {
+      case 'init': events.length = 0; events.push(...e.history); e.history.forEach((h) => remember(h.user)); state = e.state; setStatus(e.status); renderFeed(); renderState(); break;
+      case 'status': setStatus(e); break;
+      case 'clients': games = e.games; renderGames(); break;
+      case 'state': state = e.state; renderState(); break;
+      case 'ack': { const ev = events.find((x) => x.eid === e.eid); if (ev) { ev.acks = e.acks; renderFeed(); } break; }
+      default:
+        if (e.eid && !e.replay && !events.some((x) => x.eid === e.eid)) {
+          events.push(e); if (events.length > 400) events.shift();
+          remember(e.user); renderFeed();
+        }
+    }
+  };
+  ws.onclose = () => { setStatus({ connected: false, message: 'Sunucu kapalı. Terminalde "npm start -- kullaniciadi" çalıştır.' }, true); games = 0; renderGames(); setTimeout(connect, 2000); };
+}
+function send(action, extra = {}) {
+  if (ws?.readyState !== 1) { toast('Sunucuya bağlı değil', true); return false; }
+  ws.send(JSON.stringify({ type: 'admin', action, ...extra }));
+  return true;
+}
+function setStatus(s, down) {
+  const c = $('stTik');
+  c.className = 'chip ' + (s.connected ? 'ok' : down ? 'bad' : 'warn');
+  c.lastChild.textContent = s.connected ? `TikTok: ${s.message}` : s.message;
+}
+function renderGames() {
+  const c = $('stGame');
+  c.className = 'chip ' + (games > 0 ? 'ok' : 'bad');
+  c.lastChild.textContent = games > 0 ? `Oyun ekranı açık (${games})` : 'Oyun ekranı AÇIK DEĞİL — olaylar işlenmez!';
+}
+
+// ---------------------------------------------------------------- olay akışı
+const ICON = { gift: '🎁', chat: '💬', follow: '➕', share: '↗️' };
+function describe(e) {
+  const s = el('div', 'what');
+  if (e.type === 'gift') {
+    const total = (e.diamonds || 1) * (e.count || 1);
+    s.append(`🎁 ${e.giftName || 'Hediye'}${e.giftId && e.giftId !== 'manual' ? ` #${e.giftId}` : ''}${e.count > 1 ? ` x${e.count}` : ''} = `, el('span', 'coins', `${total} jeton`));
+  } else if (e.type === 'chat') s.textContent = `💬 ${e.text}`;
+  else s.textContent = `${ICON[e.type] || '•'} ${e.type === 'follow' ? 'takip etti' : 'paylaştı'}`;
+  return s;
+}
+function renderFeed() {
+  const box = $('feed');
+  const list = events.filter((e) => filter === 'all' || e.type === filter || (filter === 'chat' && e.type !== 'gift')).slice(-150).reverse();
+  box.replaceChildren();
+  if (!list.length) { box.append(el('div', 'empty', filter === 'gift' ? 'Henüz hediye gelmedi.' : 'Henüz olay yok.')); return; }
+  const now = Date.now();
+  for (const e of list) {
+    const miss = !e.acks && now - e.at > MISS_AFTER;
+    const row = el('div', `ev ${e.type}${miss ? ' miss' : ''}`);
+    row.append(el('div', 'time', hms(e.at)));
+    const mid = el('div'); mid.style.minWidth = '0';
+    mid.append(who(e.user, null), describe(e));
+    row.append(mid);
+    const side = el('div', 'side');
+    if (e.manual) side.append(el('span', 'badge man', '✋ Elle'));
+    side.append(el('span', `badge ${e.acks ? 'done' : miss ? 'miss' : 'wait'}`, e.acks ? `✓ İşlendi${e.acks > 1 ? ` ×${e.acks}` : ''}` : miss ? '⚠ İşlenmedi' : '⏳ Bekliyor'));
+    const b = el('button', 'sm', '↻ Uygula');
+    b.title = 'Bu olayı oyuna tekrar gönder';
+    b.onclick = () => {
+      if (e.acks && e.type === 'gift' && !confirm(`Bu hediye oyunda zaten işlendi.\nTekrar uygularsan ${(e.diamonds || 1) * (e.count || 1)} jeton bir kez daha eklenir. Emin misin?`)) return;
+      if (send('replay', { eid: e.eid })) toast('Olay tekrar gönderildi');
+    };
+    side.append(b);
+    row.append(side);
+    box.append(row);
+  }
+}
+$('tabs').onclick = (ev) => {
+  const b = ev.target.closest('button'); if (!b) return;
+  filter = b.dataset.f;
+  for (const x of $('tabs').children) x.classList.toggle('on', x === b);
+  renderFeed();
+};
+setInterval(() => { if (events.some((e) => !e.acks && Date.now() - e.at < MISS_AFTER + 1500)) renderFeed(); }, 1000);
+
+// ---------------------------------------------------------------- elle işlem formu
+function formUser() {
+  const id = $('uid').value.trim().replace(/^@/, '');
+  if (!id) { toast('Önce kullanıcı adını yaz', true); $('uid').focus(); return null; }
+  const k = known.get(id);
+  return { id, name: $('uname').value.trim() || k?.name || id, avatar: k?.avatar || '' };
+}
+function pick(u, { scroll = true } = {}) {
+  if (!u?.id) return;
+  remember(u);
+  $('uid').value = u.id; $('uname').value = u.name && u.name !== u.id ? u.name : '';
+  autoName = $('uname').value;
+  closeAc();
+  renderSel();
+  if (scroll) $('uid').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  toast(`@${u.id} seçildi`);
+}
+
+// kullanıcı arama: kullanıcı adında ya da görünen isimde geçen herkes (Türkçe harf duyarsız)
+const norm = (x) => String(x || '').toLocaleLowerCase('tr').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ı/g, 'i').trim();
+let acList = [], acHi = -1, autoName = null; // autoName: seçimle otomatik dolan görünen isim
+function whereIs(id) {
+  if (!state) return '';
+  for (const [r, lab] of [['portre', '🖼️ portreyi taşıyor'], ['omuz', '⚰️ tabutu taşıyor'], ['sancak', '🚩 sancaktar']]) {
+    if ((state.roles?.[r] || []).some((x) => x?.id === id)) return lab;
+  }
+  const m = (state.mourners || []).find((x) => x.id === id);
+  if (m) return m.gifted ? '🎁 ön safta' : '🕯️ saflarda';
+  return '';
+}
+function search(q) {
+  const n = norm(q.replace(/^@/, ''));
+  const all = [...known.values()];
+  const inProc = (u) => (whereIs(u.id) ? 1 : 0);
+  if (!n) return all.sort((a, b) => inProc(b) - inProc(a) || (b.score || 0) - (a.score || 0)).slice(0, 12);
+  const score = (u) => {
+    const id = norm(u.id), nm = norm(u.name);
+    if (id === n || nm === n) return 0;
+    if (id.startsWith(n) || nm.startsWith(n)) return 1;
+    if (id.includes(n) || nm.includes(n)) return 2;
+    return 9;
+  };
+  return all.map((u) => [score(u), u]).filter(([sc]) => sc < 9).sort((a, b) => a[0] - b[0] || inProc(b[1]) - inProc(a[1])).slice(0, 12).map(([, u]) => u);
+}
+function renderAc() {
+  const box = $('ac');
+  acList = search($('uid').value);
+  if (acHi >= acList.length) acHi = acList.length - 1;
+  box.replaceChildren();
+  if (!acList.length) { box.append(el('div', 'none', known.size ? 'Eşleşen kişi yok. Yeni biri için kullanıcı adını tam yaz.' : 'Henüz kimse gelmedi. Kullanıcı adını tam yaz.')); }
+  acList.forEach((u, i) => {
+    const o = el('div', 'opt' + (i === acHi ? ' hi' : ''));
+    o.append(avatar(u));
+    const t = el('div'); t.style.minWidth = '0';
+    const where = whereIs(u.id);
+    t.append(el('b', '', u.name || u.id), el('small', '', `@${u.id}${u.score ? ` · ${u.score} jeton` : ''}${where ? ` · ${where}` : ''}`));
+    o.append(t);
+    o.addEventListener('pointerdown', (ev) => { ev.preventDefault(); pick(u, { scroll: false }); });
+    o.addEventListener('pointerenter', () => { acHi = i; for (const [j, c] of [...box.children].entries()) c.classList.toggle('hi', j === i); });
+    box.append(o);
+  });
+  box.classList.add('open');
+}
+function closeAc() { $('ac').classList.remove('open'); acHi = -1; }
+$('uid').addEventListener('focus', () => { acHi = -1; renderAc(); });
+$('uid').addEventListener('input', () => {
+  if (autoName !== null && $('uname').value === autoName) $('uname').value = ''; // önceki kişinin ismi kalmasın
+  autoName = null;
+  acHi = $('uid').value.trim() ? 0 : -1; renderAc(); renderSel(); });
+$('uid').addEventListener('blur', () => setTimeout(closeAc, 120));
+$('uid').addEventListener('keydown', (ev) => {
+  const open = $('ac').classList.contains('open');
+  if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+    if (!open) renderAc();
+    ev.preventDefault();
+    const n = acList.length; if (!n) return;
+    acHi = ev.key === 'ArrowDown' ? (acHi + 1) % n : (acHi - 1 + n) % n;
+    renderAc();
+  } else if (ev.key === 'Enter') {
+    ev.preventDefault();
+    if (open && acHi >= 0 && acList[acHi]) pick(acList[acHi], { scroll: false });
+    else { closeAc(); renderSel(); }
+  } else if (ev.key === 'Escape') closeAc();
+});
+
+// formda kim seçili, şu an alayda nerede
+function renderSel() {
+  const box = $('selcard');
+  const id = $('uid').value.trim().replace(/^@/, '');
+  const k0 = known.get(id), key = `${id}|${$('uname').value}|${k0?.name}|${k0?.avatar}|${whereIs(id)}|${k0?.score}`;
+  if (box.dataset.key === key) return; // değişmediyse yeniden çizme (✕ tıklaması kaybolmasın)
+  box.dataset.key = key;
+  box.replaceChildren();
+  box.classList.toggle('on', !!id);
+  if (!id) { box.append(el('span', 'hint', 'Kimse seçili değil. Yukarıdan ara ya da listelerde bir isme tıkla.')); return; }
+  const k = known.get(id);
+  const u = { id, name: $('uname').value.trim() || k?.name || id, avatar: k?.avatar || '' };
+  const w = el('div', 'who'); w.style.cursor = 'default';
+  w.append(avatar(u));
+  const t = el('div'); t.style.minWidth = '0';
+  t.append(el('b', '', u.name), el('small', '', `@${id}${k ? '' : ' · yeni kişi (henüz görülmedi)'}`));
+  w.append(t);
+  const where = whereIs(id), sc = (state?.mourners || []).find((x) => x.id === id)?.score ?? k?.score;
+  const st = el('div', 'st', `${where || 'alayda değil'}${sc ? `\n${sc} jeton` : ''}`); st.style.whiteSpace = 'pre-line';
+  const clr = el('button', 'sm clr', '✕'); clr.type = 'button'; clr.title = 'Seçimi temizle';
+  clr.onclick = () => { $('uid').value = ''; $('uname').value = ''; autoName = null; renderSel(); $('uid').focus(); };
+  box.append(w, st, clr);
+}
+$('uname').addEventListener('input', () => { autoName = null; renderSel(); });
+
+const CHIPS = [1, 5, 10, 30, 99, 199, 300, 500, 1000];
+for (const c of CHIPS) {
+  const b = el('button', '', String(c)); b.type = 'button';
+  b.onclick = () => { $('coins').value = c; effect(); };
+  $('coinChips').append(b);
+}
+function effect() {
+  const c = Math.max(1, Math.round(Number($('coins').value) || 1));
+  for (const b of $('coinChips').children) b.classList.toggle('on', Number(b.textContent) === c);
+  const r = state?.rules || {};
+  const gn = $('gname').value.trim().toLocaleLowerCase('tr');
+  const g = gn && (r.giftRoles || []).find((x) => x.names.some((n) => n.toLocaleLowerCase('tr') === gn));
+  const role = g ? ` · ${g.role === 'omuz' ? 'tabutu omuzlar' : g.role === 'portre' ? 'şehzadenin portresini taşır' : 'sancak taşır'}` : ' · ön safa geçer';
+  $('effect').textContent = `Etkisi: +${c} puan · alayda süresiz kalır${role}`;
+}
+$('coins').addEventListener('input', effect);
+$('gname').addEventListener('input', effect);
+
+$('giveGift').onclick = () => {
+  const u = formUser(); if (!u) return;
+  const coins = Math.max(1, Math.round(Number($('coins').value) || 1));
+  if (coins >= 1000 && !confirm(`@${u.id} için ${coins} jeton uygulansın mı?`)) return;
+  if (send('gift', { user: u, coins, giftName: $('gname').value.trim(), log: $('logit').checked })) toast(`🎁 @${u.id} → ${coins} jeton uygulandı`);
+};
+$('doJoin').onclick = () => { const u = formUser(); if (u && send('join', { user: u })) toast(`🕯️ @${u.id} saflara eklendi`); };
+$('doKeep').onclick = () => { const u = formUser(); if (u && send('keep', { user: u })) toast(`📌 @${u.id} saflarda sabitlendi`); };
+$('doKick').onclick = () => { const u = formUser(); if (u && confirm(`@${u.id} alaydan çıkarılsın mı?`) && send('kick', { user: u })) toast(`@${u.id} çıkarıldı`); };
+
+// ---------------------------------------------------------------- durum (roller, halay, müzik)
+const ROLE_DEF = [['portre', 0, '🖼️ Portreyi taşıyan (en önde)']];
+for (let i = 0; i < 8; i++) ROLE_DEF.push(['omuz', i, `⚰️ ${i < 4 ? 'Sol' : 'Sağ'} ${(i % 4) + 1}. taşıyıcı`]);
+for (let i = 0; i < 2; i++) ROLE_DEF.push(['sancak', i, `🚩 ${i ? 'Sağ' : 'Sol'} sancaktar`]);
+const roleCards = {};
+function renderRoles() {
+  for (const [r, slot, label] of ROLE_DEF) {
+    const s = state?.roles?.[r]?.[slot] || null;
+    const k = `${r}${slot}`;
+    let c = roleCards[k];
+    if (!c) {
+      const card = el('div', 'role');
+      const head = el('div', 'head'), time = el('span', '', 'boş');
+      head.append(el('span', '', label), time);
+      const body = el('div');
+      const acts = el('div', 'acts');
+      const a = el('button', 'sm', '⬅ Formdakini ata');
+      a.onclick = () => { const u = formUser(); if (u && send('role', { user: u, role: r, slot })) toast(`@${u.id} → ${label}`); };
+      const x = el('button', 'sm danger', 'Boşalt');
+      x.onclick = () => { if (confirm(`${label} koltuğu boşaltılsın mı?`)) send('unrole', { role: r, slot }); };
+      acts.append(a, x); card.append(head, body, acts);
+      $('roles').append(card);
+      c = roleCards[k] = { time, body, x, key: null };
+    }
+    c.time.textContent = s ? 'dolu' : 'boş';
+    c.x.disabled = !s;
+    const key = s ? `${s.id}|${s.name}|${s.score}|${s.avatar}` : '-' + (state ? 'x' : '');
+    if (key === c.key) continue;
+    c.key = key;
+    if (s) { remember(s); c.body.replaceChildren(who(s, s.score ? `@${s.id} · ${s.score} jeton` : `@${s.id}`)); }
+    else {
+      const labels = (state?.rules?.giftRoles || []).filter((x) => x.role === r).map((x) => x.label).join(' / ');
+      c.body.replaceChildren(el('div', 'hint', labels ? `Boş · "${labels}" atan alır` : 'Boş'));
+    }
+  }
+}
+
+const rows = new Map(); // dansçı id -> { tr, cells }
+function renderDancers() {
+  const list = state?.mourners || [];
+  const body = $('dancers');
+  $('dEmpty').style.display = list.length ? 'none' : '';
+  $('dCount').textContent = state ? `${list.length}/${state.capacity}${state.full ? ' · dolu' : ''}` : '';
+  const seen = new Set();
+  const freeOrder = list.filter((d) => !d.kept).sort((a, b) => a.joined - b.joined).map((d) => d.id);
+  list.forEach((d, i) => {
+    seen.add(d.id); remember(d);
+    let r = rows.get(d.id);
+    if (!r) {
+      const tr = el('tr');
+      const tdW = el('td'), tdS = el('td', 'num'), tdT = el('td', 'num'), tdA = el('td', 'acts');
+      const btn = (txt, title, fn, cls = 'sm') => { const b = el('button', cls, txt); b.title = title; b.onclick = fn; return b; };
+      const id0 = d.id;
+      const u = () => { const cur = rows.get(id0)?.d || known.get(id0) || {}; return { id: id0, name: cur.name || id0, avatar: cur.avatar || '' }; };
+      tdA.append(
+        btn('📌', 'Sabitle / sabitlemeyi kaldır (yorumla girenler sırayla çıkar, sabitlenen çıkmaz)', () => send('keep', { user: u(), off: !!rows.get(id0)?.d.kept && !rows.get(id0)?.d.gifted })),
+        btn('+10', '10 puan ekle (hediye sayılmaz)', () => send('score', { user: u(), delta: 10 })),
+        btn('−10', '10 puan düş', () => send('score', { user: u(), delta: -10 })),
+        btn('⚰️', 'Tabutu omuzlasın (boş ya da en eski koltuğa)', () => send('role', { user: u(), role: 'omuz' })),
+        btn('🖼️', 'Portreyi taşısın', () => send('role', { user: u(), role: 'portre' })),
+        btn('🚩', 'Sancak taşısın', () => send('role', { user: u(), role: 'sancak' })),
+        btn('✕', 'Alaydan çıkar', () => { if (confirm(`@${id0} alaydan çıkarılsın mı?`)) send('kick', { user: u() }); }, 'sm danger'),
+      );
+      tr.append(tdW, tdS, tdT, tdA);
+      r = { tr, tdW, tdS, tdT, key: '' };
+      rows.set(d.id, r);
+    }
+    r.d = d;
+    const key = `${d.name}|${d.avatar}|${d.slot}|${d.gender}`;
+    if (r.key !== key) {
+      r.key = key;
+      r.tdW.replaceChildren(who(d, `@${d.id} · ${d.slot + 1}. sırada${d.gender === 'female' ? ' · kadın' : ''}`));
+    }
+    r.tdS.textContent = d.score;
+    const rank = d.kept ? 0 : freeOrder.indexOf(d.id) + 1;
+    r.tdT.textContent = d.gifted ? '🎁 Kalıcı' : d.kept ? '📌 Sabit' : state.full ? `💬 ${rank}. çıkacak` : '💬 Yorumla';
+    r.tdT.title = d.kept ? 'Saflarda süresiz kalır' : 'Saflar doluyken yeni biri gelince yorumla girenlerin en eskisi ayrılır';
+    r.tdT.className = 'num' + (!d.kept && state.full && rank === 1 ? ' low' : '');
+    if (body.children[i] !== r.tr) body.insertBefore(r.tr, body.children[i] || null);
+  });
+  for (const [id, r] of rows) if (!seen.has(id)) { r.tr.remove(); rows.delete(id); }
+}
+
+function renderMusic() {
+  if (!state) return;
+  const mt = $('musicToggle');
+  mt.textContent = state.musicOff ? '🔊 Oyun müziğini aç' : '🔇 Oyun müziğini kapat';
+  mt.classList.toggle('danger', !!state.musicOff);
+  $('np').replaceChildren(`🎵 ${state.music || '—'}`, el('small', '', `dua sayacı %${state.dua}${state.duaOn ? ' · 🤲 dua anı' : ''}`));
+}
+
+
+function renderState() {
+  if (state) { state.top?.forEach(remember); }
+  renderRoles(); renderDancers(); renderMusic(); effect(); renderSel();
+}
+
+document.querySelectorAll('[data-cam]').forEach((b) => (b.onclick = () => send('camera', { shot: b.dataset.cam })));
+$('musicToggle').onclick = () => send('music', { off: !state?.musicOff });
+$('reset').onclick = () => { if (confirm('Bütün puanlar, roller ve saflar sıfırlansın mı?')) send('reset'); };
+
+renderGames(); renderState(); connect();
+</script>
+</body>
+</html>

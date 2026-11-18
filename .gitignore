@@ -1,0 +1,5 @@
+node_modules/
+logs/
+*.log
+# kullanılmayan Mixamo modeli (Mixamo karakterleri tek başına paylaşılamaz)
+public/models/Michelle.glb

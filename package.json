@@ -1,0 +1,16 @@
+{
+  "name": "tiktok-sehzade-mustafa",
+  "version": "0.1.0",
+  "description": "TikTok canlı yayın için interaktif Şehzade Mustafa cenaze alayı",
+  "private": true,
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "three": "0.170.0",
+    "tiktok-live-connector": "2.5.0",
+    "ws": "8.18.0"
+  }
+}
